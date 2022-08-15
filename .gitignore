@@ -26,3 +26,9 @@ com.txt
 
 # Cog
 .cog
+
+# PyCharm project
+.idea/
+
+# Pyenv data
+.python-version
