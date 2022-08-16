@@ -32,3 +32,6 @@ com.txt
 
 # Pyenv data
 .python-version
+
+# Models
+models/
