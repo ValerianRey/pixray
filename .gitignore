@@ -35,3 +35,6 @@ com.txt
 
 # Models
 models/
+
+# Dependency
+diffvg
