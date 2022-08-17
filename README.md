@@ -33,3 +33,12 @@ Examples of pixray colab notebooks can be found [in this separate repo](https://
 running in a Docker using [Cog](https://github.com/replicate/cog) is also possible. First, [install Docker and Cog](https://github.com/replicate/cog#install), then you can use `cog run` to run Pixray inside Docker. For example: 
 
     cog run python pixray.py --drawer=pixel --prompt=sunrise --outdir sunrise01
+    
+    
+## Additional steps
+- Installing ffmpeg
+`sudo apt install ffmpeg`
+
+- Downgrading gcc and g++ to version 7.0 (otherwise problems with CMAKE of diffvg)
+I followed this: https://stackoverflow.com/questions/65605972/cmake-unsupported-gnu-version-gcc-versions-later-than-8-are-not-supported
+It might not be the cleanest way to do that.
