@@ -362,6 +362,9 @@ class MyRandomPerspective(K.RandomPerspective):
     ) -> torch.Tensor:
         _, _, height, width = input.shape
         transform = cast(torch.Tensor, transform)
+        print("applying transform")
+        print(self.flags["resample"])
+        print(self.flags["align_corners"])
         return kornia.geometry.transform.warp_perspective(
             input,
             transform,
@@ -643,7 +646,7 @@ def rebuild_optimisers(args):
     global best_loss, best_iter, best_z, num_loss_drop, max_loss_drops, iter_drop_delay
     global drawer, filters
 
-    drop_divisor = 10**num_loss_drop
+    drop_divisor = (1. / args.gamma_lr) ** num_loss_drop
     new_opts = drawer.get_opts(drop_divisor)
     if new_opts is None:
         # legacy
@@ -769,6 +772,8 @@ def do_init(args):
             perceptor = get_clip_perceptor(clip_model, device)
             perceptors[clip_model] = perceptor
 
+        print("Perceptors:", perceptors)
+
     # now separately setup cuts
     for clip_model in args.clip_models:
         perceptor = perceptors[clip_model]
@@ -807,6 +812,7 @@ def do_init(args):
         # setup init image wih pil
         # first - always start with noise or blank
         if args.init_noise == "pixels":
+            print("Using pixels as initial noise")
             img = random_noise_image(args.size[0], args.size[1])
         elif args.init_noise == "gradient":
             img = random_gradient_image(args.size[0], args.size[1])
@@ -1006,6 +1012,7 @@ def do_init(args):
     # CLIP tokenize/encode
     for prompt in args.prompts:
         for clip_model in args.clip_models:
+            print("Clip model:", clip_model)
             pMs = pmsTable[clip_model]
             perceptor = perceptors[clip_model]
             txt, weight, stop = parse_prompt(prompt)
@@ -1017,8 +1024,9 @@ def do_init(args):
                 stops = actual_tokens.argmax(dim=-1) - 1
                 embed = perceptor.encode_text(actual_tokens, stops).float()
             else:
-                # print(f"--> {clip_model} normal encoding {txt}")
+                print(f"--> {clip_model} normal encoding {txt}")
                 embed = perceptor.encode_text(txt).float()
+                print("Embedding shape:", embed.shape)
             if clip_model == drawer_clip_target:
                 allpromptembeds.append(embed)
                 allweights.append(weight)
@@ -1666,7 +1674,6 @@ def train(args, cur_it):
         num_batches = args.batches
         for i in range(num_batches):
             lossAll = ascend_txt(args)
-
             if i == 0:
                 if cur_anim_index is None or cur_anim_index == 0:
                     if cur_it in args.learning_rate_drops:
@@ -2423,6 +2430,13 @@ def setup_parser(vq_parser):
         help="Output file directory",
         default="outputs/%DATE%_%SEQ%",
         dest="outdir",
+    )
+    vq_parser.add_argument(
+        "--gamma_lr",
+        type=float,
+        help="Learning rate multiplier",
+        default=0.1,
+        dest="gamma_lr",
     )
 
     return vq_parser

@@ -379,7 +379,11 @@ class PixelDrawer(DrawingInterface):
         # Optimizers
         # points_optim = torch.optim.Adam(points_vars, lr=1.0)
         # width_optim = torch.optim.Adam(stroke_width_vars, lr=0.1)
-        color_optim = torch.optim.Adam(self.color_vars, lr=0.03 / decay_divisor)
+        lr = 1.0 / decay_divisor  # TODO: use args.learning_rate instead of a constant value
+        # I think it's really wrong to have this function here. There's no reason to force using Adam, there's no reason to re-create the optimizer
+        # Each time we drop the learning rate (just use a learning rate scheduler), so I don't think there's even a reason to have this function.
+        color_optim = torch.optim.Adam(self.color_vars, lr=lr)
+        print("LR = ", lr)
         self.opts = [color_optim]
         return self.opts
 
